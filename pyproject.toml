@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "devops-agent"
+version = "0.1.0"
+description = "AI-powered DevOps CLI assistant"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "M K Pavan Kumar", email = "manthapavankumar11@gamil.com"}
+]
+keywords = ["devops", "cli", "ai", "automation", "terraform", "kubernetes", "docker"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Build Tools",
+    "License :: OSI Approved :: Apache2.0 License",
+    "Programming Language :: Python :: 3",
+]
+
+dependencies = [
+    "click>=8.3.0",
+    "rich>=14.1.0",
+    "anthropic>=0.69.0",
+    "pyyaml>=6.0.3",
+    "python-dotenv>=1.1.1",
+    "requests>=2.32.5",
+    "colorama>=0.4.6",
+    "agno>=2.1.0",
+    "poml>=0.0.8"
+]
+
+[project.scripts]
+devops-agent = "devops_agent.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "black>=25.9.0",
+    "isort>=6.1.0",
+    "flake8>=7.3.0",
+]
+
+[tool.setuptools]
+packages = ["devops_agent", "devops_agent.core", "devops_agent.templates", "devops_agent.utils", "devops_agent.prompts"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+
+[tool.isort]
+profile = "black"
+line_length = 100
