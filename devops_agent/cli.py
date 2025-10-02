@@ -38,7 +38,7 @@ def run(log_file, query, output, format):
 
     if query:
         console.print(f"[yellow]Processing query:[/yellow] {query}")
-        console.print("[green]✓[/green] Query processing will be implemented here")
+
 
     if output:
         console.print(f"[blue]Output will be saved to:[/blue] {output}")
