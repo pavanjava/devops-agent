@@ -25,12 +25,16 @@ dependencies = [
     "click>=8.3.0",
     "rich>=14.1.0",
     "anthropic>=0.69.0",
+    "openai>=2.1.0",
+    "google-genai>=1.41.0",
     "pyyaml>=6.0.3",
     "python-dotenv>=1.1.1",
     "requests>=2.32.5",
     "colorama>=0.4.6",
     "agno>=2.1.0",
-    "poml>=0.0.8"
+    "poml>=0.0.8",
+    "qdrant-client>=1.15.1",
+    "fastembed>=0.7.3"
 ]
 
 [project.scripts]

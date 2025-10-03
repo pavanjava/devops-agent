@@ -8,10 +8,16 @@ rich>=13.0.0
 
 # LLM Integration
 anthropic>=0.18.0
+openai>=2.1.0
+google-genai>=1.41.0
 
 # File Processing
 pyyaml>=6.0
 python-dotenv>=1.0.0
+
+#vector db
+qdrant-client>=1.15.1
+fastembed>=0.7.3
 
 # Utilities
 requests>=2.31.0
