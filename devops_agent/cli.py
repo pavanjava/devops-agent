@@ -85,13 +85,16 @@ def run_interactive_mode(provider: str, output: str = None, format: str = 'text'
 
             # Process the query
             console.print(Panel.fit(
-                "[bold cyan]DevOps Agent[/bold cyan] [dim]Thinking...[/dim]",
+                "[bold cyan]DevOps Team[/bold cyan] [dim]Thinking...[/dim]",
                 border_style="cyan"
             ))
 
             try:
                 response = execute_master_agent(provider=provider, user_query=user_input)
-                console.print(f"\n[bold cyan]Assistant:[/bold cyan]\n{response}")
+                console.print(Panel.fit(
+                    f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
+                    border_style="yellow"
+                ))
 
                 # Save to output file if specified
                 if output:
@@ -119,7 +122,10 @@ def process_query(provider: str, query: str, output: str = None, format: str = '
 
     try:
         response = execute_master_agent(provider=provider, user_query=query)
-        console.print(f"\n[bold cyan]Assistant:[/bold cyan]\n{response}")
+        console.print(Panel.fit(
+            f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
+            border_style="yellow"
+        ))
 
         if output:
             save_to_file(output, query, response, format)

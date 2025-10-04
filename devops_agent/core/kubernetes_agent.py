@@ -34,7 +34,7 @@ console = Console()
 def execute_k8s_agent(provider: str, user_query: str = None) -> Agent:
 
     console.print(Panel.fit(
-        "[bold cyan]Kubernetes Agent Executing...[/bold cyan]",
+        "[bold cyan]Kubernetes Agent Invoking...[/bold cyan]",
         border_style="cyan"
     ))
 
@@ -54,7 +54,7 @@ def execute_k8s_agent(provider: str, user_query: str = None) -> Agent:
         description="You help answer questions about the kubernetes domain of any infrastructure like Azure(AKS), AWS(EKS), and GCP(GKS)",
         instructions=k8s_prompt,
         # knowledge=knowledge,
-        # stream_intermediate_steps=True,
+        stream_intermediate_steps=True,
         # add_knowledge_to_context=True,
         # add_datetime_to_context=True,
         # add_session_summary_to_context=True,

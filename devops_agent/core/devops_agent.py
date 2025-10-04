@@ -32,7 +32,7 @@ console = Console()
 
 def execute_devops_agent(provider: str, user_query: str = None) -> Agent:
     console.print(Panel.fit(
-        "[bold cyan]DevOps Agent Executing...[/bold cyan]",
+        "[bold cyan]DevOps Agent Invoking...[/bold cyan]",
         border_style="cyan"
     ))
     llm_provider = provider.lower().strip()
@@ -51,7 +51,7 @@ def execute_devops_agent(provider: str, user_query: str = None) -> Agent:
         description="You help answer questions about the devops domain.",
         instructions=devops_prompt,
         # knowledge=knowledge,
-        # stream_intermediate_steps=True,
+        stream_intermediate_steps=True,
         # add_knowledge_to_context=True,
         # add_datetime_to_context=True,
         # add_session_summary_to_context=True,
