@@ -2,7 +2,7 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
-from devops_agent.core.devops_agent import execute_devops_agent
+from devops_agent.core.master_agent import execute_master_agent
 
 console = Console()
 
@@ -90,7 +90,7 @@ def run_interactive_mode(provider: str, output: str = None, format: str = 'text'
             ))
 
             try:
-                response = execute_devops_agent(provider=provider, user_query=user_input)
+                response = execute_master_agent(provider=provider, user_query=user_input)
                 console.print(f"\n[bold cyan]Assistant:[/bold cyan]\n{response}")
 
                 # Save to output file if specified
@@ -118,7 +118,7 @@ def process_query(provider: str, query: str, output: str = None, format: str = '
     ))
 
     try:
-        response = execute_devops_agent(provider=provider, user_query=query)
+        response = execute_master_agent(provider=provider, user_query=query)
         console.print(f"\n[bold cyan]Assistant:[/bold cyan]\n{response}")
 
         if output:
