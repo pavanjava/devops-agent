@@ -1,18 +1,33 @@
 import asyncio
 import os
+from typing import Any
 
 from agno.knowledge import Knowledge
 from agno.models.openai import OpenAIChat
 from agno.models.anthropic import Claude
 from agno.models.google.gemini import Gemini
 from agno.team import Team
+from agno.tools.reasoning import ReasoningTools
 from agno.vectordb.qdrant import Qdrant
+from agno.db.in_memory import InMemoryDb
 from agno.knowledge.embedder.fastembed import FastEmbedEmbedder
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import VectorParams, Distance
 
 from devops_agent.core.devops_agent import execute_devops_agent
 from devops_agent.core.kubernetes_agent import execute_k8s_agent
+
+from rich.console import Console
+from rich.panel import Panel
+from rich.live import Live
+from rich.markdown import Markdown
+from rich.console import Group
+
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
+
+console = Console()
 
 qclient = QdrantClient(url=os.environ.get('QDRANT_URL'), api_key=os.environ.get('QDRANT_API_KEY'))
 if not qclient.collection_exists("devops-memory"):
@@ -41,12 +56,10 @@ def execute_master_agent(provider: str, user_query: str) -> str:
     devops_team = Team(
         name="Multi Cloud and Devops Team",
         model=model,
-        respond_directly=True,
         members=[
             execute_devops_agent(provider=provider),
             execute_k8s_agent(provider=provider),
         ],
-        markdown=True,
         instructions=[
             "You are a intelligent router that directs questions to the appropriate agent.",
             "If the user asks in a non devops or k8s question whose agent is not a team member, respond in English with:",
@@ -54,13 +67,20 @@ def execute_master_agent(provider: str, user_query: str) -> str:
             "Always check the technology or domain of the user's input before routing to an agent.",
             "For unsupported technologies like coding, flowcharts, analytics etc respond in English with the above message.",
         ],
+        tools=[ReasoningTools()],  # Enable reasoning capabilities
         knowledge=knowledge,
-        determine_input_for_members=True,
+        db=InMemoryDb(),
+        respond_directly=False, # if set to true the member response if directly given to user
+        determine_input_for_members=False,
+        delegate_task_to_all_members=False,
         stream_intermediate_steps=True,
         add_knowledge_to_context=True,
         add_datetime_to_context=True,
         add_session_summary_to_context=True,
         show_members_responses=True,
+        share_member_interactions=True,
+        enable_agentic_memory=True,
+        markdown=True
     )
 
     response = devops_team.run(user_query, stream_intermediate_steps=True, retry=3)
@@ -68,7 +88,9 @@ def execute_master_agent(provider: str, user_query: str) -> str:
     # saved the response to knowledge in async mode
     asyncio.run(
         knowledge.add_content_async(text_content=f"question: {user_query}, Assistant: {response.content}",
-                                    metadata={"agent_id": response.team_id, "session_id": response.session_id})
+                                    skip_if_exists=False,
+                                    metadata={"agent_id": response.team_id, "session_id": response.session_id,
+                                              "run_id": response.run_id})
     )
 
     return response.content
