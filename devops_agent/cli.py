@@ -1,8 +1,11 @@
+from pathlib import Path
+
 import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 from devops_agent.core.master_agent import execute_master_agent
+from devops_agent.core.log_analysis_agent import execute_log_analysis_agent
 
 console = Console()
 
@@ -52,7 +55,20 @@ def run(log_file, provider, query, output, format, interactive):
 
     if log_file:
         console.print(f"[yellow]Analyzing log file:[/yellow] {log_file}")
-        console.print("[green]✓[/green] Log analysis will be implemented here")
+        try:
+            file_path = Path(__file__).parent.joinpath(log_file)
+            response = execute_log_analysis_agent(provider=provider, log_file=file_path)
+            console.print(Panel.fit(
+                f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
+                border_style="yellow"
+            ))
+
+            if output:
+                save_to_file(output, query, response, format)
+                console.print(f"\n[dim]Response saved to {output}[/dim]")
+
+        except Exception as e:
+            console.print(f"\n[red]Error:[/red] {str(e)}")
 
     if query:
         process_query(provider, query, output, format)
