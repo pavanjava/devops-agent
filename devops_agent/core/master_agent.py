@@ -1,7 +1,6 @@
 import asyncio
 import os
 from pathlib import Path
-from typing import Any
 
 from agno.knowledge import Knowledge
 from agno.models.openai import OpenAIChat
@@ -18,10 +17,9 @@ from qdrant_client.http.models import VectorParams, Distance
 from devops_agent.core.devops_agent import execute_devops_agent
 from devops_agent.core.kubernetes_agent import execute_k8s_agent
 from devops_agent.core.terraform_agent import execute_terraform_agent
-
 from rich.console import Console
-
 from dotenv import load_dotenv, find_dotenv
+from devops_agent.utils.stream_handler import StreamingResponseHandler
 
 load_dotenv(find_dotenv())
 
@@ -81,14 +79,26 @@ def execute_master_agent(provider: str, user_query: str = None, log_file: Path =
         enable_agentic_memory=True,
         markdown=True
     )
-    response = devops_team.run(user_query, stream_intermediate_steps=True, retry=3)
+    # response = devops_team.run(user_query, stream_intermediate_steps=True, retry=3)
+
+    handler = StreamingResponseHandler(
+        console=console,
+        show_message=True,
+        show_reasoning=True,
+        show_tool_calls=True,
+        show_member_responses=True,
+        markdown=True
+    )
+
+    # Assuming you have a team object
+    handler.handle_stream(devops_team, input=user_query)
+
+    response = handler.response_content
 
     # saved the response to knowledge in async mode
     asyncio.run(
-        knowledge.add_content_async(text_content=f"question: {user_query}, Assistant: {response.content}",
-                                    skip_if_exists=False,
-                                    metadata={"agent_id": response.team_id, "session_id": response.session_id,
-                                              "run_id": response.run_id})
-    )
+        knowledge.add_content_async(text_content=f"question: {user_query}, Assistant: {response}",
+                                    skip_if_exists=False)
 
-    return response.content
+    )
+    return response
