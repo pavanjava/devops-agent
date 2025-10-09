@@ -1,6 +1,6 @@
 # DevOps Agent
 
-An AI-powered CLI tool to assist with DevOps tasks, log analysis, and infrastructure code generation.
+An AI-powered CLI tool to assist with DevOps troubleshooting, Applications with Kubernetes architecture, log analysis, and infrastructure code generation.
 
 ## Features
 
