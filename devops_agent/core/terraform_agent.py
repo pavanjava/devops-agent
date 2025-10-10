@@ -14,7 +14,7 @@ terraform_prompt = prompt_from_poml('terraform.poml')
 
 console = Console()
 
-def execute_terraform_agent(provider: str, user_query: str = None) -> Agent:
+def execute_terraform_agent(provider: str) -> Agent:
 
     console.print(Panel.fit(
         "[bold cyan]Terraform Agent Invoking...[/bold cyan]",

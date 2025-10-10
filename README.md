@@ -106,6 +106,25 @@ devops-agent/
 └── docs/                 # Documentation
 ```
 
+## Common issues and fixes
+- if you see any error like `INFO Error checking if content_hash ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73 exists: Unexpected Response: 400 (Bad Request)                                 
+     Raw response content:                                                                                                                                                          
+     b'{"status":{"error":"Bad request: Index required but not found for \\"content_hash\\" of one of the following types: [keyword]. Help: Create an index for this key or use a   
+     different filter."},"time":2 ...' `
+```text
+curl --request PUT \
+  --url https://9df18135-290c-45b3-8158-f73b103dc352.eu-west-2-0.aws.cloud.qdrant.io:6333/collections/devops-memory/index \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+  "field_name": "content_hash",
+  "field_schema": {
+    "type": "keyword",
+    "on_disk": true
+  }
+}'
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

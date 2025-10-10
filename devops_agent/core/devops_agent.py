@@ -1,5 +1,6 @@
 import asyncio
 import os
+from textwrap import dedent
 
 from agno.agent import Agent
 from agno.knowledge import Knowledge
@@ -48,13 +49,20 @@ def execute_devops_agent(provider: str, user_query: str = None) -> Agent:
     devops_assist = Agent(
         name="DevOps Agent",
         model=model,
-        description="You help answer questions about the devops domain.",
+        description="You help answer questions about the devops domain like kubernetes troubleshooting, docker troubleshooting etc.",
         instructions=devops_prompt,
-        # knowledge=knowledge,
+        additional_input=dedent("""\
+        Instruction: You should always answer scenarios like below (few examples as below).
+        - Debug high memory usage in Kubernetes pods causing frequent OOMKills and restarts
+        - Analyze distributed tracing data to identify performance bottleneck in microservices architecture
+        - Troubleshoot intermittent 504 gateway timeout errors in production load balancer
+        - Investigate CI/CD pipeline failures and implement automated debugging workflows
+        - Root cause analysis for database deadlocks causing application timeouts
+        - Debug DNS resolution issues affecting service discovery in Kubernetes cluster
+        - Analyze logs to identify security breach and implement containment procedures
+        - Troubleshoot GitOps deployment failures and implement automated rollback procedures                                                                 
+        """),
         stream_intermediate_steps=True,
-        # add_knowledge_to_context=True,
-        # add_datetime_to_context=True,
-        # add_session_summary_to_context=True,
         markdown=True,
     )
 

@@ -31,6 +31,8 @@ class StreamingResponseHandler:
         # Content trackers
         self.response_content = ""
         self.reasoning_content = ""
+        self.reasoning_steps = []
+        self.processed_reasoning_steps = set()  # Track processed reasoning steps
         self.input_content = ""
 
         # Tool call trackers
@@ -61,6 +63,48 @@ class StreamingResponseHandler:
             border_style=border_style,
             padding=(1, 2),
         )
+
+    def _add_reasoning_step(self, step: Any):
+        """Add a reasoning step, avoiding duplicates"""
+        if step is None:
+            return
+
+        # Create a unique identifier for the reasoning step
+        # Use multiple attributes to create a more robust ID
+        step_id = None
+
+        # Try to create ID from step attributes
+        if hasattr(step, 'title') and hasattr(step, 'reasoning'):
+            title = getattr(step, 'title', '')
+            reasoning = getattr(step, 'reasoning', '')
+            # Use a hash of title + reasoning content (first 100 chars to avoid huge IDs)
+            step_id = hash(f"{title}:{reasoning[:100] if reasoning else ''}")
+        else:
+            # Fallback to hash of string representation
+            step_id = hash(str(step)[:200])
+
+        # Only add if we haven't seen this step before
+        if step_id not in self.processed_reasoning_steps:
+            self.processed_reasoning_steps.add(step_id)
+            self.reasoning_steps.append(step)
+
+    def _format_reasoning_step(self, step: Any) -> str:
+        """Format a reasoning step for display"""
+        if isinstance(step, str):
+            return step
+
+        # Try to extract content from ReasoningStep object
+        content = getattr(step, 'content', None)
+        if content:
+            return str(content)
+
+        # Try to extract text or message
+        text = getattr(step, 'text', None) or getattr(step, 'message', None)
+        if text:
+            return str(text)
+
+        # Fallback to string representation
+        return str(step)
 
     def _format_tool_call(self, tool: Any) -> str:
         """Format a tool call for display"""
@@ -110,7 +154,18 @@ class StreamingResponseHandler:
             )
             panels.append(message_panel)
 
-        # Reasoning panel
+        # Reasoning steps panels
+        if self.reasoning_steps and self.show_reasoning:
+            for i, step in enumerate(self.reasoning_steps, 1):
+                reasoning_text = self._format_reasoning_step(step)
+                reasoning_panel = self._create_panel(
+                    Text(reasoning_text),
+                    f"Reasoning Step {i}",
+                    border_style="green"
+                )
+                panels.append(reasoning_panel)
+
+        # Reasoning content panel (for string-based reasoning)
         if self.reasoning_content and self.show_reasoning:
             thinking_panel = self._create_panel(
                 Text(self.reasoning_content),
@@ -240,16 +295,31 @@ class StreamingResponseHandler:
                             self.response_content += content
 
                     elif event_type == "TeamReasoningStep":
-                        # Reasoning content
+                        # Reasoning content - could be string or ReasoningStep object
                         reasoning = getattr(event, 'content', '')
                         if reasoning:
-                            self.reasoning_content += reasoning
+                            if isinstance(reasoning, str):
+                                self.reasoning_content += reasoning
+                            else:
+                                # It's a ReasoningStep object - deduplicate
+                                self._add_reasoning_step(reasoning)
 
                     elif event_type == "reasoning_content":
                         # Alternative reasoning event
                         reasoning = getattr(event, 'reasoning_content', '')
                         if reasoning:
-                            self.reasoning_content += reasoning
+                            if isinstance(reasoning, str):
+                                self.reasoning_content += reasoning
+                            else:
+                                self._add_reasoning_step(reasoning)
+
+                    # Handle reasoning_steps attribute - deduplicate each step
+                    if hasattr(event, 'reasoning_steps') and event.reasoning_steps:
+                        if isinstance(event.reasoning_steps, list):
+                            for step in event.reasoning_steps:
+                                self._add_reasoning_step(step)
+                        else:
+                            self._add_reasoning_step(event.reasoning_steps)
 
                     elif event_type == "TeamToolCallStarted":
                         # Team tool call started
