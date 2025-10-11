@@ -38,10 +38,10 @@ vector_db = Qdrant(collection="devops-memory", url=os.environ.get('QDRANT_URL'),
 knowledge = Knowledge(vector_db=vector_db)
 
 
-def execute_master_agent(provider: str, user_query: str = None, log_file: Path = None) -> str:
+def execute_master_agent(provider: str, user_query: str = None) -> str:
     llm_provider = provider.lower().strip()
     if llm_provider == 'openai':
-        model = OpenAIChat(id="gpt-5-mini", api_key=os.environ.get('OPENAI_API_KEY'))
+        model = OpenAIChat(id="gpt-4o", api_key=os.environ.get('OPENAI_API_KEY'))
     elif llm_provider == 'anthropic':
         model = Claude(id="claude-sonnet-4-5-20250929", temperature=0.6, api_key=os.environ.get('ANTHROPIC_API_KEY'))
     elif llm_provider == 'google':
