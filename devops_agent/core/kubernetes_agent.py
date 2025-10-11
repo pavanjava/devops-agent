@@ -41,7 +41,7 @@ def execute_k8s_agent(provider: str, user_query: str = None) -> Agent:
 
     llm_provider = provider.lower().strip()
     if llm_provider == 'openai':
-        model = OpenAIChat(id="gpt-5-mini", api_key=os.environ.get('OPENAI_API_KEY'))
+        model = OpenAIChat(id="gpt-4o", api_key=os.environ.get('OPENAI_API_KEY'))
     elif llm_provider == 'anthropic':
         model = Claude(id="claude-sonnet-4-5-20250929", temperature=0.6, api_key=os.environ.get('ANTHROPIC_API_KEY'))
     elif llm_provider == 'google':
