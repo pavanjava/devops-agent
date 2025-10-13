@@ -139,14 +139,15 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 Apache2.0 License - see LICENSE file for details
 
-## Roadmap
+## RoadMap
 
 - [ ] Implement log analysis with pattern detection
-- [ ] Add support for multiple LLM providers
-- [ ] Create template library for common infrastructure patterns
-- [ ] Add interactive mode
-- [ ] Support for custom plugins
-- [ ] Integration with CI/CD pipelines
+- [ ] Add support for multiple LLM providers with model params `--model gpt-5-mini`
+- [ ] Add Support for self-hosted models `Ollama` & `vLLM`
+- [ ] Add Support for Reasoning controls
+- [ ] Add Support for MCP to use local file system for quick access
+- [ ] Add support for Human-in-the-Loop for more focused and collaborated work
+- [ ] Create direct pip package for easy install of the agent.
 
 ## Support
 
