@@ -24,13 +24,19 @@ pip install devops-agent
 ```
 
 ## Configuration
-
-Create a `.env` file in the project root:
-
+#### LLM API KEYS
 ```env
-ANTHROPIC_API_KEY=your_api_key_here
+ export GEMINI_API_KEY=YOUR API KEY
+ or 
+ export ANTHROPIC_API_KEY=YOUR API KEY
+ or
+ export OPENAI_API_KEY=YOUR API KEY
 ```
-
+#### Qdrant Config for Agent Memory
+```env
+export QDRANT_URL=YOUR QDRANT URL
+export QDRANT_API_KEY=YOUR QDRANT API KEY
+```
 ## Usage
 
 ### Analyze Log Files
