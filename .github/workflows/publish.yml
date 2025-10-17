@@ -1,0 +1,117 @@
+# .github/workflows/publish.yml
+name: Publish to PyPI
+
+on:
+  # Manual trigger ONLY - requires explicit action
+  workflow_dispatch:
+    inputs:
+      publish_to_pypi:
+        description: 'Publish to PyPI? Type "yes" to confirm'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      version_tag:
+        description: 'Version tag (e.g., v0.0.1)'
+        required: false
+        type: string
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[dev]
+          pip install pytest pytest-cov
+
+      - name: Run linting
+        run: |
+          black --check devops_agent
+          isort --check-only devops_agent
+          flake8 devops_agent --max-line-length=100
+
+      - name: Test CLI installation
+        run: |
+          pip install -e .
+          devops-agent --version
+
+  build-and-publish:
+    name: Build and Publish
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check package
+        run: |
+          twine check dist/*
+          ls -la dist/
+          echo "📦 Package version: $(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")"
+
+      - name: Confirm before publish
+        if: github.event.inputs.publish_to_pypi == 'yes'
+        run: |
+          echo "⚠️  About to publish to PyPI (PRODUCTION)"
+          echo "📦 Package contents:"
+          ls -la dist/
+          echo "✅ Proceeding with PyPI upload..."
+
+      - name: Publish to PyPI
+        if: github.event.inputs.publish_to_pypi == 'yes'
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          if [ -z "$TWINE_PASSWORD" ]; then
+            echo "❌ Error: PYPI_TOKEN secret is not configured!"
+            echo "Please add your PyPI token to GitHub Secrets"
+            exit 1
+          fi
+          
+          twine upload dist/*
+          echo "✅ Published to PyPI successfully!"
+          echo "📦 View at: https://pypi.org/project/devops-agent/"
+          echo "📥 Install: pip install devops-agent"
+
+      - name: Skip publish message
+        if: github.event.inputs.publish_to_pypi != 'yes'
+        run: |
+          echo "📦 Package built successfully but NOT published to PyPI"
+          echo "ℹ️  This was a test run. To publish, run the workflow again with 'Publish to PyPI' set to 'yes'"
+
+      - name: Create version tag
+        if: github.event.inputs.publish_to_pypi == 'yes' && github.event.inputs.version_tag != ''
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag ${{ github.event.inputs.version_tag }}
+          git push origin ${{ github.event.inputs.version_tag }}
+          echo "🏷️  Created tag: ${{ github.event.inputs.version_tag }}"
