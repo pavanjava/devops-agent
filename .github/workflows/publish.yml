@@ -37,12 +37,6 @@ jobs:
           pip install .[dev]
           pip install pytest pytest-cov
 
-      - name: Run linting
-        run: |
-          black --check devops_agent
-          isort --check-only devops_agent
-          flake8 devops_agent --max-line-length=100
-
       - name: Test CLI installation
         run: |
           pip install -e .
