@@ -20,7 +20,7 @@ on:
 
 jobs:
   test:
-    name: Run Build
+    name: Run PreInstalls
     runs-on: ubuntu-latest
 
     steps:
