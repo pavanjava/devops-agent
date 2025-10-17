@@ -41,6 +41,8 @@ jobs:
     name: Build and Publish
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     if: github.event_name == 'workflow_dispatch'
 
     steps:
@@ -95,12 +97,3 @@ jobs:
         run: |
           echo "📦 Package built successfully but NOT published to PyPI"
           echo "ℹ️  This was a test run. To publish, run the workflow again with 'Publish to PyPI' set to 'yes'"
-
-      - name: Create version tag
-        if: github.event.inputs.publish_to_pypi == 'yes' && github.event.inputs.version_tag != ''
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git tag ${{ github.event.inputs.version_tag }}
-          git push origin ${{ github.event.inputs.version_tag }}
-          echo "🏷️  Created tag: ${{ github.event.inputs.version_tag }}"
