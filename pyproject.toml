@@ -34,7 +34,8 @@ dependencies = [
     "agno>=2.1.0",
     "poml>=0.0.8",
     "qdrant-client>=1.15.1",
-    "fastembed>=0.7.3"
+    "fastembed>=0.7.3",
+    "ddgs>=9.6.1"
 ]
 
 [project.scripts]
