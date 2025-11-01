@@ -42,7 +42,7 @@ def run(log_file, provider, query, output, format, interactive):
     """Run the DevOps agent with specified options"""
 
     if not provider:
-        console.print("[yellow]No provider specified, defaulting to openai[/yellow]")
+        console.print("[yellow]No provider specified[/yellow]")
         provider = default_provider()
 
     # Interactive mode
