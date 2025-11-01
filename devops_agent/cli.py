@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 import click
 from rich.console import Console
@@ -17,7 +18,17 @@ def cli():
 
 
 def default_provider() -> str:
-    return "openai"
+    """Automatically detect which LLM provider to use based on available API keys."""
+    if os.environ.get("OPENAI_API_KEY"):
+        return "openai"
+    elif os.environ.get("ANTHROPIC_API_KEY"):
+        return "anthropic"
+    elif os.environ.get("GEMINI_API_KEY"):
+        return "google"
+    else:
+        # If nothing found, fallback and warn
+        console.print("[bold yellow]⚠️  No API key found. Defaulting to OpenAI (if set later).[/bold yellow]")
+        return "openai"
 
 
 @cli.command()
