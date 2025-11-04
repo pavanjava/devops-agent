@@ -156,4 +156,5 @@ For issues and questions, please open an issue on GitHub.
 ## Special Credits
 - Built with <b>Agno2.0</b> framework for multi-agent orchestration
 - Uses <b>POML</b> for structured prompt engineering
+- Uses <b>Qdrant</b> for memory management
 - powered by Claude (Anthropic), GPT (OpenAI) and Gemini (Google)
