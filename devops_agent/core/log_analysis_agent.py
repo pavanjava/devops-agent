@@ -11,20 +11,20 @@ from rich.panel import Panel
 
 console = Console()
 
-def execute_log_analysis_agent(provider: str, log_file: Path) -> Agent:
+def execute_log_analysis_agent(provider: str, model: str, log_file: Path, debug_mode: bool= False) -> Agent:
     console.print(Panel.fit(
         "[bold cyan]Log Analysis Agent Invoking...[/bold cyan]",
         border_style="cyan"
     ))
     llm_provider = provider.lower().strip()
     if llm_provider == 'openai':
-        model = OpenAIChat(id="gtp-4o", api_key=os.environ.get('OPENAI_API_KEY'))
+        model = OpenAIChat(id=model, api_key=os.environ.get('OPENAI_API_KEY'))
     elif llm_provider == 'anthropic':
-        model = Claude(id="claude-sonnet-4-5-20250929", temperature=0.6, api_key=os.environ.get('ANTHROPIC_API_KEY'))
+        model = Claude(id=model, temperature=0.6, api_key=os.environ.get('ANTHROPIC_API_KEY'))
     elif llm_provider == 'google':
-        model = Gemini(id="gemini-2.5-flash", temperature=0.6, api_key=os.environ.get('GEMINI_API_KEY'))
+        model = Gemini(id=model, temperature=0.6, api_key=os.environ.get('GEMINI_API_KEY'))
     else:
-        model = OpenAIChat(id="gpt-5-mini"), #default
+        model = OpenAIChat(id=model), #default
 
     file_analysis_agent = Agent(
         name="LogFile Analysis Agent",
@@ -35,10 +35,12 @@ def execute_log_analysis_agent(provider: str, log_file: Path) -> Agent:
             "You are an AI agent that can analyze log files.",
             "You are given a log file and you need to analyse and give detailed answer to the question from the user.",
         ],
+        debug_mode=debug_mode
     )
 
     print("executing the log analysis")
-    user_query = 'analyse and give all the insights such as critical errors, patterns, anomalies, or any other significant findings'
+    user_query = ('analyse and give all the insights such as critical errors, patterns, anomalies, or any other '
+                  'significant findings')
     response = file_analysis_agent.run(user_query, files=[File(filepath=log_file)])
 
     return response.content

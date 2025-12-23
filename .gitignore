@@ -207,3 +207,7 @@ marimo/_lsp/
 __marimo__/
 
 agent_evals
+
+my_knowledge.db
+response.md
+tmp
