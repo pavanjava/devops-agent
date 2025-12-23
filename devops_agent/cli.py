@@ -9,6 +9,7 @@ from devops_agent.core.log_analysis_agent import execute_log_analysis_agent
 
 console = Console()
 
+
 @click.group()
 @click.version_option(version="0.1.0")
 def cli():
@@ -20,23 +21,36 @@ def default_provider() -> str:
     return "openai"
 
 
+def default_model() -> str:
+    return "gpt-4o"
+
+
 @cli.command()
 @click.option('--log-file', type=click.Path(exists=True), help='Path to log file to analyze')
-@click.option('--provider', type=str, help='Configure the agent with one of the enterprise grade providers like OpenAI, Anthropic, Gemini')
+@click.option('--provider', type=str,
+              help='Configure the agent with one of the enterprise grade providers like OpenAI, Anthropic, Gemini')
+@click.option('--model', type=str,
+              help='Configure the model name in accordance with the provider selected like gpt-4o, gemini-flash-2.5, etc.')
+@click.option('--output', type=click.Path(exists=True), help='Path to output file')
 @click.option('--query', type=str, help='Query to ask the DevOps agent')
 @click.option('--output', type=click.Path(), help='Output file path (optional)')
 @click.option('--format', type=click.Choice(['text', 'json', 'markdown']), default='text', help='Output format')
 @click.option('--interactive', '-i', is_flag=True, help='Run in interactive mode')
-def run(log_file, provider, query, output, format, interactive):
+@click.option('--debug_mode', help='Run all agents in debug mode, don\'t use in production')
+def run(log_file, provider, model, query, output, format, interactive, debug_mode):
     """Run the DevOps agent with specified options"""
 
     if not provider:
         console.print("[yellow]No provider specified, defaulting to openai[/yellow]")
         provider = default_provider()
 
+    if not model:
+        console.print("[yellow]No model specified, defaulting to gpt-4o[/yellow]")
+        provider = default_model()
+
     # Interactive mode
     if interactive:
-        run_interactive_mode(provider, output, format)
+        run_interactive_mode(provider, model, output, format, debug_mode)
         return
 
     # Single query mode (original behavior)
@@ -57,7 +71,8 @@ def run(log_file, provider, query, output, format, interactive):
         console.print(f"[yellow]Analyzing log file:[/yellow] {log_file}")
         try:
             file_path = Path(__file__).parent.joinpath(log_file)
-            response = execute_log_analysis_agent(provider=provider, log_file=file_path)
+            response = execute_log_analysis_agent(provider=provider, model=model, log_file=file_path,
+                                                  debug_mode=debug_mode)
             console.print(Panel.fit(
                 f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
                 border_style="yellow"
@@ -71,10 +86,10 @@ def run(log_file, provider, query, output, format, interactive):
             console.print(f"\n[red]Error:[/red] {str(e)}")
 
     if query:
-        process_query(provider, query, output, format)
+        process_query(provider, query, output, format, debug_mode)
 
 
-def run_interactive_mode(provider: str, output: str = None, format: str = 'text'):
+def run_interactive_mode(provider: str, model: str, output: str = None, format: str = 'text', debug_mode: bool = False):
     """Run the agent in interactive mode with continuous conversation"""
 
     console.print(Panel.fit(
@@ -106,7 +121,8 @@ def run_interactive_mode(provider: str, output: str = None, format: str = 'text'
             ))
 
             try:
-                response = execute_master_agent(provider=provider, user_query=user_input)
+                response = execute_master_agent(provider=provider, model_str=model, user_query=user_input,
+                                                debug_mode=debug_mode)
                 console.print(Panel.fit(
                     f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
                     border_style="yellow"
@@ -128,7 +144,8 @@ def run_interactive_mode(provider: str, output: str = None, format: str = 'text'
             break
 
 
-def process_query(provider: str, query: str, output: str = None, format: str = 'text'):
+def process_query(provider: str, model: str, query: str, output: str = None, format: str = 'text',
+                  debug_mode: bool = False):
     """Process a single query"""
     console.print(f"[yellow]Processing query:[/yellow] {query}")
     console.print(Panel.fit(
@@ -137,7 +154,7 @@ def process_query(provider: str, query: str, output: str = None, format: str = '
     ))
 
     try:
-        response = execute_master_agent(provider=provider, user_query=query)
+        response = execute_master_agent(provider=provider, model_str=model, user_query=query, debug_mode=debug_mode)
         console.print(Panel.fit(
             f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
             border_style="yellow"
@@ -172,7 +189,7 @@ def save_to_file(filepath: str, query: str, response: str, format: str):
     mode = 'a' if output_path.exists() else 'w'
     with open(output_path, mode) as f:
         if mode == 'a':
-            f.write("\n" + "="*50 + "\n\n")
+            f.write("\n" + "=" * 50 + "\n\n")
         f.write(content)
 
 

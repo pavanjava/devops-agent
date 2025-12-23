@@ -1,6 +1,5 @@
 import asyncio
 import os
-from pathlib import Path
 
 from agno.knowledge import Knowledge
 from agno.models.openai import OpenAIChat
@@ -10,9 +9,11 @@ from agno.team import Team
 from agno.tools.reasoning import ReasoningTools
 from agno.vectordb.qdrant import Qdrant
 from agno.db.in_memory import InMemoryDb
+from agno.db.sqlite import SqliteDb
+from agno.vectordb.chroma import ChromaDb
 from agno.knowledge.embedder.fastembed import FastEmbedEmbedder
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import VectorParams, Distance
+from qdrant_client.http.models import VectorParams, Distance, models
 
 from devops_agent.core.devops_agent import execute_devops_agent
 from devops_agent.core.kubernetes_agent import execute_k8s_agent
@@ -25,37 +26,56 @@ load_dotenv(find_dotenv())
 
 console = Console()
 
-qclient = QdrantClient(url=os.environ.get('QDRANT_URL'), api_key=os.environ.get('QDRANT_API_KEY'))
-if not qclient.collection_exists("devops-memory"):
-    qclient.create_collection(collection_name="devops-memory",
-                              vectors_config=VectorParams(size=768, distance=Distance.COSINE))
+try:
+    qclient = QdrantClient(url=os.environ.get('QDRANT_URL'), api_key=os.environ.get('QDRANT_API_KEY'))
+    if not qclient.collection_exists("devops-memory"):
+        qclient.create_collection(collection_name="devops-memory",
+                                  vectors_config=VectorParams(size=768, distance=Distance.COSINE))
 
-vector_db = Qdrant(collection="devops-memory", url=os.environ.get('QDRANT_URL'),
-                   api_key=os.environ.get('QDRANT_API_KEY'),
-                   embedder=FastEmbedEmbedder(id="snowflake/snowflake-arctic-embed-m"))
+    # Create vector_db with remote connection
+    vector_db = Qdrant(collection="devops-memory",
+                       url=os.environ.get('QDRANT_URL'),
+                       api_key=os.environ.get('QDRANT_API_KEY'),
+                       embedder=FastEmbedEmbedder(id="snowflake/snowflake-arctic-embed-m"))
 
-# Create knowledge base
-knowledge = Knowledge(vector_db=vector_db)
+    # Create knowledge base
+    knowledge = Knowledge(vector_db=vector_db)
 
+except Exception as e:
+    console.print(f"[yellow]Warning: Could not connect to remote Qdrant, falling back to in-memory mode: {e}[/yellow]")
 
-def execute_master_agent(provider: str, user_query: str = None) -> str:
+    # SQLite for content tracking
+    contents_db = SqliteDb(db_file="my_knowledge.db")
+
+    # Create Knowledge with SQLite contents DB and ChromaDB
+    knowledge = Knowledge(
+        name="Basic SDK Knowledge Base",
+        description="Agno 2.0 Knowledge Implementation with ChromaDB",
+        contents_db=contents_db,
+        vector_db=ChromaDb(
+            collection="vectors", path="tmp/chromadb", persistent_client=True,
+            embedder=FastEmbedEmbedder(id="snowflake/snowflake-arctic-embed-m")
+        ),
+    )
+
+def execute_master_agent(provider: str, model_str: str, user_query: str = None, debug_mode: bool=False) -> str:
     llm_provider = provider.lower().strip()
     if llm_provider == 'openai':
-        model = OpenAIChat(id="gpt-4o", api_key=os.environ.get('OPENAI_API_KEY'))
+        model = OpenAIChat(id=model_str, api_key=os.environ.get('OPENAI_API_KEY'))
     elif llm_provider == 'anthropic':
-        model = Claude(id="claude-sonnet-4-5-20250929", temperature=0.6, api_key=os.environ.get('ANTHROPIC_API_KEY'))
+        model = Claude(id=model_str, temperature=0.6, api_key=os.environ.get('ANTHROPIC_API_KEY'))
     elif llm_provider == 'google':
-        model = Gemini(id="gemini-2.5-flash", temperature=0.6, api_key=os.environ.get('GEMINI_API_KEY'))
+        model = Gemini(id=model_str, temperature=0.6, api_key=os.environ.get('GEMINI_API_KEY'))
     else:
-        model = OpenAIChat(id="gpt-5-mini"),  # default
+        model = OpenAIChat(id=model_str),  # default
 
     devops_team = Team(
         name="Multi Cloud and Devops Team",
         model=model,
         members=[
-            execute_devops_agent(provider=provider),
-            execute_k8s_agent(provider=provider),
-            execute_terraform_agent(provider=provider)
+            execute_devops_agent(provider=provider, model=model_str, debug_mode=debug_mode),
+            execute_k8s_agent(provider=provider, model=model_str, debug_mode=debug_mode),
+            execute_terraform_agent(provider=provider, model=model_str, debug_mode=debug_mode),
         ],
         instructions=[
             "You are a intelligent router that directs questions to the appropriate agent.",
@@ -98,7 +118,5 @@ def execute_master_agent(provider: str, user_query: str = None) -> str:
     # saved the response to knowledge in async mode
     asyncio.run(
         knowledge.add_content_async(text_content=f"question: {user_query}, Assistant: {response}",
-                                    skip_if_exists=False)
-
-    )
+                                    skip_if_exists=True))
     return response

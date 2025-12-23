@@ -19,20 +19,20 @@ devops_prompt = prompt_from_poml('devops.poml')
 
 console = Console()
 
-def execute_devops_agent(provider: str) -> Agent:
+def execute_devops_agent(provider: str, model: str, debug_mode: bool = False) -> Agent:
     console.print(Panel.fit(
         "[bold cyan]DevOps Agent Invoking...[/bold cyan]",
         border_style="cyan"
     ))
     llm_provider = provider.lower().strip()
     if llm_provider == 'openai':
-        model = OpenAIChat(id="gpt-4o", api_key=os.environ.get('OPENAI_API_KEY'))
+        model = OpenAIChat(id=model, api_key=os.environ.get('OPENAI_API_KEY'))
     elif llm_provider == 'anthropic':
-        model = Claude(id="claude-sonnet-4-5-20250929", temperature=0.6, api_key=os.environ.get('ANTHROPIC_API_KEY'))
+        model = Claude(id=model, temperature=0.6, api_key=os.environ.get('ANTHROPIC_API_KEY'))
     elif llm_provider == 'google':
-        model = Gemini(id="gemini-2.5-flash", temperature=0.6, api_key=os.environ.get('GEMINI_API_KEY'))
+        model = Gemini(id=model, temperature=0.6, api_key=os.environ.get('GEMINI_API_KEY'))
     else:
-        model = OpenAIChat(id="gpt-5-mini"), #default
+        model = OpenAIChat(id=model), #default
 
     devops_assist = Agent(
         name="DevOps Agent",
@@ -52,6 +52,7 @@ def execute_devops_agent(provider: str) -> Agent:
         """),
         stream_intermediate_steps=True,
         markdown=True,
+        debug_mode=debug_mode,
     )
 
     return devops_assist
