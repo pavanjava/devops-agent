@@ -2,9 +2,7 @@ import asyncio
 import os
 
 from agno.knowledge import Knowledge
-from agno.models.openai import OpenAIChat
-from agno.models.anthropic import Claude
-from agno.models.google.gemini import Gemini
+from devops_agent.utils.model_provider import get_model
 from agno.team import Team
 from agno.tools.reasoning import ReasoningTools
 from agno.vectordb.qdrant import Qdrant
@@ -59,15 +57,8 @@ except Exception as e:
     )
 
 def execute_master_agent(provider: str, model_str: str, user_query: str = None, debug_mode: bool=False) -> str:
-    llm_provider = provider.lower().strip()
-    if llm_provider == 'openai':
-        model = OpenAIChat(id=model_str, api_key=os.environ.get('OPENAI_API_KEY'))
-    elif llm_provider == 'anthropic':
-        model = Claude(id=model_str, temperature=0.6, api_key=os.environ.get('ANTHROPIC_API_KEY'))
-    elif llm_provider == 'google':
-        model = Gemini(id=model_str, temperature=0.6, api_key=os.environ.get('GEMINI_API_KEY'))
-    else:
-        model = OpenAIChat(id=model_str),  # default
+    # handle model provider uniquely at single place
+    model = get_model(provider=provider, model_str=model_str)
 
     devops_team = Team(
         name="Multi Cloud and Devops Team",
