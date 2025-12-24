@@ -26,6 +26,10 @@ def default_provider() -> str:
         return "anthropic"
     elif os.environ.get("GEMINI_API_KEY"):
         return "google"
+    elif os.environ.get("OLLAMA_API_KEY"):
+        return "ollama"
+    elif os.environ.get("VLLM_API_KEY"):
+        return "vllm"
     else:
         # If nothing found, fallback and warn
         console.print("[bold yellow]⚠️  No API key found. Defaulting to OpenAI (if set later).[/bold yellow]")
@@ -47,8 +51,9 @@ def default_model() -> str:
 @click.option('--output', type=click.Path(), help='Output file path (optional)')
 @click.option('--format', type=click.Choice(['text', 'json', 'markdown']), default='text', help='Output format')
 @click.option('--interactive', '-i', is_flag=True, help='Run in interactive mode')
-@click.option('--debug_mode', help='Run all agents in debug mode, don\'t use in production')
-def run(log_file, provider, model, query, output, format, interactive, debug_mode):
+@click.option('--debug_mode', type=bool, help='Run all agents in debug mode, don\'t use in production')
+@click.option('--reasoning_enabled', type=bool, help='Run all agents in debug mode, don\'t use in production')
+def run(log_file, provider, model, query, output, format, interactive, debug_mode, reasoning_enabled):
     """Run the DevOps agent with specified options"""
 
     if not provider:
@@ -59,9 +64,9 @@ def run(log_file, provider, model, query, output, format, interactive, debug_mod
         console.print("[yellow]No model specified, defaulting to gpt-4o[/yellow]")
         provider = default_model()
 
-    # Interactive mode
+        # Interactive mode
     if interactive:
-        run_interactive_mode(provider, model, output, format, debug_mode)
+        run_interactive_mode(provider, model, output, format, debug_mode, reasoning_enabled)
         return
 
     # Single query mode (original behavior)
@@ -83,7 +88,7 @@ def run(log_file, provider, model, query, output, format, interactive, debug_mod
         try:
             file_path = Path(__file__).parent.joinpath(log_file)
             response = execute_log_analysis_agent(provider=provider, model=model, log_file=file_path,
-                                                  debug_mode=debug_mode)
+                                                  debug_mode=debug_mode, reasoning=reasoning_enabled)
             console.print(Panel.fit(
                 f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
                 border_style="yellow"
@@ -97,10 +102,11 @@ def run(log_file, provider, model, query, output, format, interactive, debug_mod
             console.print(f"\n[red]Error:[/red] {str(e)}")
 
     if query:
-        process_query(provider, query, output, format, debug_mode)
+        process_query(provider, query, output, format, debug_mode, reasoning_enabled)
 
 
-def run_interactive_mode(provider: str, model: str, output: str = None, format: str = 'text', debug_mode: bool = False):
+def run_interactive_mode(provider: str, model: str, output: str = None, format: str = 'text',
+                         debug_mode: bool = False, reasoning_enabled: bool = False):
     """Run the agent in interactive mode with continuous conversation"""
 
     console.print(Panel.fit(
@@ -133,7 +139,7 @@ def run_interactive_mode(provider: str, model: str, output: str = None, format: 
 
             try:
                 response = execute_master_agent(provider=provider, model_str=model, user_query=user_input,
-                                                debug_mode=debug_mode)
+                                                debug_mode=debug_mode, reasoning=reasoning_enabled)
                 console.print(Panel.fit(
                     f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
                     border_style="yellow"
@@ -156,7 +162,7 @@ def run_interactive_mode(provider: str, model: str, output: str = None, format: 
 
 
 def process_query(provider: str, model: str, query: str, output: str = None, format: str = 'text',
-                  debug_mode: bool = False):
+                  debug_mode: bool = False, reasoning_enabled: bool = False):
     """Process a single query"""
     console.print(f"[yellow]Processing query:[/yellow] {query}")
     console.print(Panel.fit(
@@ -165,7 +171,8 @@ def process_query(provider: str, model: str, query: str, output: str = None, for
     ))
 
     try:
-        response = execute_master_agent(provider=provider, model_str=model, user_query=query, debug_mode=debug_mode)
+        response = execute_master_agent(provider=provider, model_str=model, user_query=query,
+                                        debug_mode=debug_mode, reasoning=reasoning_enabled)
         console.print(Panel.fit(
             f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
             border_style="yellow"
