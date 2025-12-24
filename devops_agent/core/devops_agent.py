@@ -1,15 +1,7 @@
-import asyncio
-import os
 from textwrap import dedent
 
 from agno.agent import Agent
-from agno.knowledge import Knowledge
-from agno.models.openai import OpenAIChat
-from agno.models.anthropic import Claude
-from agno.models.google.gemini import Gemini
-from agno.vectordb.qdrant import Qdrant
-from agno.knowledge.embedder.fastembed import FastEmbedEmbedder
-from qdrant_client.http.models import VectorParams, Distance
+from devops_agent.utils.model_provider import get_model
 from rich.console import Console
 from rich.panel import Panel
 
@@ -19,20 +11,13 @@ devops_prompt = prompt_from_poml('devops.poml')
 
 console = Console()
 
-def execute_devops_agent(provider: str, model: str, debug_mode: bool = False) -> Agent:
+def execute_devops_agent(provider: str, model: str, debug_mode: bool = False, reasoning:bool=False) -> Agent:
     console.print(Panel.fit(
         "[bold cyan]DevOps Agent Invoking...[/bold cyan]",
         border_style="cyan"
     ))
-    llm_provider = provider.lower().strip()
-    if llm_provider == 'openai':
-        model = OpenAIChat(id=model, api_key=os.environ.get('OPENAI_API_KEY'))
-    elif llm_provider == 'anthropic':
-        model = Claude(id=model, temperature=0.6, api_key=os.environ.get('ANTHROPIC_API_KEY'))
-    elif llm_provider == 'google':
-        model = Gemini(id=model, temperature=0.6, api_key=os.environ.get('GEMINI_API_KEY'))
-    else:
-        model = OpenAIChat(id=model), #default
+
+    model = get_model(provider=provider, model_str=model)
 
     devops_assist = Agent(
         name="DevOps Agent",
@@ -53,6 +38,7 @@ def execute_devops_agent(provider: str, model: str, debug_mode: bool = False) ->
         stream_intermediate_steps=True,
         markdown=True,
         debug_mode=debug_mode,
+        reasoning=reasoning
     )
 
     return devops_assist

@@ -56,7 +56,8 @@ except Exception as e:
         ),
     )
 
-def execute_master_agent(provider: str, model_str: str, user_query: str = None, debug_mode: bool=False) -> str:
+def execute_master_agent(provider: str, model_str: str, user_query: str = None, debug_mode: bool=False,
+                         reasoning:bool=False) -> str:
     # handle model provider uniquely at single place
     model = get_model(provider=provider, model_str=model_str)
 
@@ -64,9 +65,9 @@ def execute_master_agent(provider: str, model_str: str, user_query: str = None, 
         name="Multi Cloud and Devops Team",
         model=model,
         members=[
-            execute_devops_agent(provider=provider, model=model_str, debug_mode=debug_mode),
-            execute_k8s_agent(provider=provider, model=model_str, debug_mode=debug_mode),
-            execute_terraform_agent(provider=provider, model=model_str, debug_mode=debug_mode),
+            execute_devops_agent(provider=provider, model=model_str, debug_mode=debug_mode, reasoning=reasoning),
+            execute_k8s_agent(provider=provider, model=model_str, debug_mode=debug_mode, reasoning=reasoning),
+            execute_terraform_agent(provider=provider, model=model_str, debug_mode=debug_mode, reasoning=reasoning),
         ],
         instructions=[
             "You are a intelligent router that directs questions to the appropriate agent.",
