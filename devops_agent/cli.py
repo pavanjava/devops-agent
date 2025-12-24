@@ -46,9 +46,8 @@ def default_model() -> str:
               help='Configure the agent with one of the enterprise grade providers like OpenAI, Anthropic, Gemini')
 @click.option('--model', type=str,
               help='Configure the model name in accordance with the provider selected like gpt-4o, gemini-flash-2.5, etc.')
-@click.option('--output', type=click.Path(exists=True), help='Path to output file')
 @click.option('--query', type=str, help='Query to ask the DevOps agent')
-@click.option('--output', type=click.Path(), help='Output file path (optional)')
+@click.option('--output', type=click.Path(), help='Output file path for saving responses')
 @click.option('--format', type=click.Choice(['text', 'json', 'markdown']), default='text', help='Output format')
 @click.option('--interactive', '-i', is_flag=True, help='Run in interactive mode')
 @click.option('--debug_mode', type=bool, help='Run all agents in debug mode, don\'t use in production')
