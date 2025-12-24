@@ -7,7 +7,14 @@ An AI-powered CLI tool to assist with DevOps troubleshooting, Applications with 
 - 📊 **Log Analysis**: Analyze log files and get actionable insights
 - 💬 **Query Interface**: Ask questions about DevOps best practices, Terraform, Kubernetes, etc.
 - 🛠️ **Template Generation**: Generate infrastructure code templates
-- 🤖 **AI-Powered**: Leverages Claude AI for intelligent responses
+- 🤖 **AI-Powered**: Leverages multiple LLM providers (OpenAI, Anthropic, Gemini, Ollama, vLLM)
+- 🎯 **Flexible Provider Selection**: Choose your preferred LLM provider and model dynamically
+- 🔒 **Self-Hosted Options**: Run privately with Ollama or vLLM
+- 🧠 **Reasoning Mode**: Enable advanced reasoning capabilities for complex queries
+- 🐛 **Debug Mode**: Troubleshoot agent behavior with detailed logging
+- 💾 **Memory Management**: Persistent context using Qdrant vector database
+- 🎨 **Interactive Mode**: Engage in continuous conversations with the agent
+- 📝 **Multiple Output Formats**: Export results as text, JSON, or Markdown
 
 ## Installation
 
@@ -25,62 +32,129 @@ pip install devops-agent
 
 ## Configuration
 #### LLM API KEYS
-```env
- export GEMINI_API_KEY=YOUR API KEY
- or 
- export ANTHROPIC_API_KEY=YOUR API KEY
- or
- export OPENAI_API_KEY=YOUR API KEY
+```bash
+# For OpenAI
+export OPENAI_API_KEY=YOUR_API_KEY
+
+# For Anthropic Claude
+export ANTHROPIC_API_KEY=YOUR_API_KEY
+
+# For Google Gemini
+export GEMINI_API_KEY=YOUR_API_KEY
+
+# For Ollama (self-hosted, typically no API key needed)
+export OLLAMA_API_KEY=YOUR_API_KEY  # Optional
+
+# For vLLM (self-hosted)
+export VLLM_API_KEY=YOUR_API_KEY
 ```
 #### Qdrant Config for Agent Memory
+(If not configured fall backs to in-memory vector store)
 ```env
 export QDRANT_URL=YOUR QDRANT URL
 export QDRANT_API_KEY=YOUR QDRANT API KEY
 ```
 ## Usage
 
-### Analyze Log Files
-
-```bash
-devops-agent run --log-file /path/to/app.log
-```
-
-### Ask Questions
+#### Ask Questions
 
 ```bash
 devops-agent run --query "I need terraform script to spin up Azure blob storage"
 devops-agent run --query "How to increase my pod memory and CPU in k8s"
 ```
 
-### Generate Templates
+#### Interactive Mode
 
 ```bash
-devops-agent template terraform
-devops-agent template kubernetes
-devops-agent template docker
+devops-agent run --interactive
+# or
+devops-agent run -i
 ```
 
-### Configuration
+### Advanced Options
+
+#### Choose Your LLM Provider and Model
 
 ```bash
-devops-agent config
+# Use OpenAI with a specific model
+devops-agent run --provider openai --model gpt-4o --query "your question"
+
+# Use Anthropic Claude
+devops-agent run --provider anthropic --model claude-sonnet-4-20250514 --query "your question"
+
+# Use Google Gemini
+devops-agent run --provider google --model gemini-2.0-flash-exp --query "your question"
+
+# Use Ollama (self-hosted)
+devops-agent run --provider ollama --model llama3 --query "your question"
+
+# Use vLLM (self-hosted)
+devops-agent run --provider vllm --model your-model-name --query "your question"
 ```
 
-## Examples
+#### Enable Debug Mode
 
 ```bash
-# Analyze application logs
-devops-agent run --log-file ./logs/app.log --format json
-
-# Get Terraform help
-devops-agent run --query "terraform script for AWS S3 bucket with versioning"
-
-# Kubernetes troubleshooting
-devops-agent run --query "pod is in CrashLoopBackOff status, how to debug?"
-
-# Save output to file
-devops-agent run --query "docker-compose for nginx and postgres" --output docker-compose.yml
+devops-agent run --query "your question" --debug_mode true
 ```
+
+#### Enable Reasoning Mode
+
+```bash
+devops-agent run --query "your question" --reasoning_enabled true
+```
+
+#### Combine Multiple Options
+
+```bash
+# Interactive mode with specific provider, model, and reasoning
+devops-agent run -i --provider anthropic --model claude-sonnet-4-20250514 --reasoning_enabled true
+
+# Query with debug mode and custom output
+devops-agent run --query "docker setup for microservices" --provider openai --model gpt-4o --debug_mode true --output result.md --format markdown
+```
+
+## CLI Options Reference
+
+### `devops-agent run` Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `--log-file` | Path | Path to log file to analyze |
+| `--provider` | String | LLM provider (openai, anthropic, google, ollama, vllm) |
+| `--model` | String | Model name (e.g., gpt-4o, claude-sonnet-4-20250514, gemini-2.0-flash-exp) |
+| `--query` | String | Query to ask the DevOps agent |
+| `--output` | Path | Output file path for saving results |
+| `--format` | Choice | Output format: text, json, or markdown (default: text) |
+| `--interactive, -i` | Flag | Run in interactive mode for continuous conversation |
+| `--debug_mode` | Boolean | Enable debug mode with detailed logging |
+| `--reasoning_enabled` | Boolean | Enable reasoning mode for complex problem-solving |
+
+### Provider-Specific Model Examples
+
+**OpenAI:**
+- `gpt-4o`
+- `gpt-5-mini`
+- `gpt-5.1`
+
+**Anthropic:**
+- `claude-sonnet-4-20250514`
+- `claude-sonnet-4-5-20250929`
+- `claude-3-5-sonnet-20241022`
+
+**Google:**
+- `gemini-3-pro`
+- `gemini-2.5-pro`
+- `gemini-2.5-flash`
+
+**Ollama (Self-hosted):**
+- `granite4:3b`
+- `qwen3:8b`
+- `cogito:latest`
+- Any model you have pulled locally
+
+**vLLM (Self-hosted):**
+- Any model served by your vLLM instance
 
 ## Development
 
@@ -112,25 +186,6 @@ devops-agent/
 └── docs/                 # Documentation
 ```
 
-## Common issues and fixes
-- if you see any error like `INFO Error checking if content_hash ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73 exists: Unexpected Response: 400 (Bad Request)                                 
-     Raw response content:                                                                                                                                                          
-     b'{"status":{"error":"Bad request: Index required but not found for \\"content_hash\\" of one of the following types: [keyword]. Help: Create an index for this key or use a   
-     different filter."},"time":2 ...' `
-```text
-curl --request PUT \
-  --url https://9df18135-290c-45b3-8158-f73b103dc352.eu-west-2-0.aws.cloud.qdrant.io:6333/collections/devops-memory/index \
-  --header 'Authorization: Bearer YOUR_API_KEY' \
-  --header 'Content-Type: application/json' \
-  --data '{
-  "field_name": "content_hash",
-  "field_schema": {
-    "type": "keyword",
-    "on_disk": true
-  }
-}'
-```
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -142,12 +197,10 @@ Apache2.0 License - see LICENSE file for details
 ## RoadMap
 
 - [ ] Implement log analysis with pattern detection
-- [ ] Add support for multiple LLM providers with model params `--model gpt-5-mini`
-- [ ] Add Support for self-hosted models `Ollama` & `vLLM`
-- [ ] Add Support for Reasoning controls
 - [ ] Add Support for MCP to use local file system for quick access
 - [ ] Add support for Human-in-the-Loop for more focused and collaborated work
-- [ ] Create direct pip package for easy install of the agent.
+- [ ] Support for custom prompt templates
+- [ ] Agent as a Service with privacy first concept
 
 ## Support
 
