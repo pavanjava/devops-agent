@@ -52,7 +52,7 @@ except Exception as e:
         contents_db=contents_db,
         vector_db=ChromaDb(
             collection="vectors", path="tmp/chromadb", persistent_client=True,
-            embedder=FastEmbedEmbedder(id="snowflake/snowflake-arctic-embed-m")
+            embedder=FastEmbedEmbedder(id="sentence-transformers/all-MiniLM-L6-v2")  # Lightweight, change model accordingly.
         ),
     )
 
