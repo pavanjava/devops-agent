@@ -6,7 +6,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 from devops_agent.core.master_agent import execute_master_agent
-from devops_agent.core.log_analysis_agent import execute_log_analysis_agent
+from devops_agent.loganalytics.log_analysis_agent import execute_log_analysis_agent
 
 console = Console()
 
