@@ -101,7 +101,7 @@ def run(log_file, provider, model, query, output, format, interactive, debug_mod
             console.print(f"\n[red]Error:[/red] {str(e)}")
 
     if query:
-        process_query(provider, query, output, format, debug_mode, reasoning_enabled)
+        process_query(provider, model, query, output, format, debug_mode, reasoning_enabled)
 
 
 def run_interactive_mode(provider: str, model: str, output: str = None, format: str = 'text',
@@ -139,10 +139,11 @@ def run_interactive_mode(provider: str, model: str, output: str = None, format: 
             try:
                 response = execute_master_agent(provider=provider, model_str=model, user_query=user_input,
                                                 debug_mode=debug_mode, reasoning=reasoning_enabled)
-                console.print(Panel.fit(
-                    f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
-                    border_style="yellow"
-                ))
+                # If needed enable for the assistant response in md format
+                # console.print(Panel.fit(
+                #     f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
+                #     border_style="yellow"
+                # ))
 
                 # Save to output file if specified
                 if output:
@@ -172,10 +173,11 @@ def process_query(provider: str, model: str, query: str, output: str = None, for
     try:
         response = execute_master_agent(provider=provider, model_str=model, user_query=query,
                                         debug_mode=debug_mode, reasoning=reasoning_enabled)
-        console.print(Panel.fit(
-            f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
-            border_style="yellow"
-        ))
+        # If needed enable for the assistant response in md format
+        # console.print(Panel.fit(
+        #     f"[bold yellow]Assistant:[/bold yellow] [dim]{response}[/dim]",
+        #     border_style="yellow"
+        # ))
 
         if output:
             save_to_file(output, query, response, format)
