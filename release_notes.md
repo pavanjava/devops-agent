@@ -16,3 +16,8 @@
 - 📚 Enhanced documentation and examples
 - 🎨 Improved output formatting
 - 🧠 Improved Memory for agents
+
+## What's New in Latest Release 🎉 (31-01-2026)
+
+### New Features
+- In Progress.... watch out the space for the announcements
